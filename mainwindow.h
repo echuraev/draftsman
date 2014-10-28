@@ -15,6 +15,11 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+private slots:
+    void onActionStart();
+    void onActionOptions();
+    void onActionAbout();
+
 private:
     Ui::MainWindow *ui;
 };
