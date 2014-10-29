@@ -24,6 +24,11 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(about, SIGNAL(triggered()), SLOT(onActionAbout()));
 }
 
+void MainWindow::closeEvent(QCloseEvent * e){
+    e->accept();
+    qApp->quit();
+}
+
 MainWindow::~MainWindow()
 {
     delete ui;

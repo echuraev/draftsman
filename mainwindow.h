@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QCloseEvent>
 
 namespace Ui {
 class MainWindow;
@@ -13,6 +14,7 @@ class MainWindow : public QMainWindow
 
 public:
     explicit MainWindow(QWidget *parent = 0);
+    void closeEvent(QCloseEvent *event);
     ~MainWindow();
 
 private slots:
