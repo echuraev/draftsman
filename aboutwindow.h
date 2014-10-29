@@ -17,6 +17,7 @@ public:
 
 private:
     Ui::AboutWindow *ui;
+    void moveToCenter();
 };
 
 #endif // ABOUTWINDOW_H

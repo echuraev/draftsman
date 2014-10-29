@@ -18,6 +18,7 @@ public:
 
 private:
     explicit OptionsWindow(QWidget *parent = 0);
+    void moveToCenter();
     static OptionsWindow * m_instance;
     static QMutex * m_mutex;
     Ui::OptionsWindow *ui;

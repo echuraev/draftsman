@@ -3,6 +3,9 @@
 #include "aboutwindow.h"
 #include "optionswindow.h"
 #include <QDebug>
+#include <QDesktopWidget>
+#include <QRect>
+#include <QPoint>
 
 // http://blog.harrix.org/?p=1813
 
@@ -11,6 +14,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    this->moveToCenter();
     QAction * about = new QAction(0);
     ui->menuBar->addAction(about);
     about->setText("About...");
@@ -43,4 +47,14 @@ void MainWindow::onActionAbout()
 {
     AboutWindow * window = new AboutWindow();
     window->show();
+}
+
+void MainWindow::moveToCenter()
+{
+    QDesktopWidget desktop;
+    QRect rect = desktop.availableGeometry(desktop.primaryScreen());
+    QPoint center = rect.center();
+    center.setX(center.x() - (this->width()/2));
+    center.setY(center.y() - (this->height()/2));
+    move(center);
 }
