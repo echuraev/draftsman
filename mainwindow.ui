@@ -14,11 +14,7 @@
    <string>Draftsman</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <layout class="QGridLayout" name="gridLayout">
-    <item row="0" column="0">
-     <widget class="QGraphicsView" name="graphicsView"/>
-    </item>
-   </layout>
+   <layout class="QGridLayout" name="gridLayout"/>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
@@ -26,7 +22,7 @@
      <x>0</x>
      <y>0</y>
      <width>619</width>
-     <height>20</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
