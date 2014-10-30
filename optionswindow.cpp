@@ -175,8 +175,8 @@ void OptionsWindow::readSettings()
     int source = m_settings.value("/source", FILE_OPTIONS).toInt();
     QString path = m_settings.value("/path", "").toString();
     int period = m_settings.value("/period", 15).toInt();
-    QString host = m_settings.value("/host", "").toString();
-    QString port = m_settings.value("/port", "").toString();
+    QString host = m_settings.value("/host", "54.191.174.225").toString();
+    QString port = m_settings.value("/port", "1430").toString();
 
     ui->separatorLine->setText(separator);
     ui->sourcesBox->setCurrentIndex(source);

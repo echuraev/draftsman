@@ -6,7 +6,7 @@
 
 QT       += core gui
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 
 TARGET = draftsman
 TEMPLATE = app
@@ -15,12 +15,17 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
     optionswindow.cpp \
-    aboutwindow.cpp
+    aboutwindow.cpp \
+    qcustomplot.cpp
 
 HEADERS  += mainwindow.h \
     optionswindow.h \
-    aboutwindow.h
+    aboutwindow.h \
+    qcustomplot.h
 
 FORMS    += mainwindow.ui \
     optionswindow.ui \
     aboutwindow.ui
+
+OTHER_FILES += \
+    res.csv

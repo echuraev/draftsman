@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QCloseEvent>
+#include <QVector>
 
 namespace Ui {
 class MainWindow;
@@ -25,6 +26,13 @@ private slots:
 private:
     Ui::MainWindow *ui;
     void moveToCenter();
+    struct Data
+    {
+        QVector<double> time;
+        QVector<double> population;
+    } m_data;
+    QString m_xLabel;
+    void parseData(QVector<QString> lines, QString separator);
 };
 
 #endif // MAINWINDOW_H
