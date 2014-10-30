@@ -33,6 +33,7 @@ private:
     } m_data;
     QString m_xLabel;
     void parseData(QVector<QString> lines, QString separator);
+    void clearData();
 };
 
 #endif // MAINWINDOW_H

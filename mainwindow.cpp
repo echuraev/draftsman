@@ -38,9 +38,10 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-
 void MainWindow::onActionStart()
 {
+    clearData();
+
     QSettings settings("Egor Churaev", "Draftsman");
     settings.beginGroup("/Options");
 
@@ -95,8 +96,10 @@ void MainWindow::onActionStart()
     ui->graphWidget->graph(0)->setData(m_data.time, m_data.population);
     ui->graphWidget->xAxis->setLabel(m_xLabel);
     ui->graphWidget->yAxis->setLabel("Population, bln");
+    QVector<double> tmp = m_data.population;
+    qSort(tmp);
     ui->graphWidget->xAxis->setRange(m_data.time.at(0), m_data.time.last());
-    ui->graphWidget->yAxis->setRange(m_data.population.at(0), m_data.population.last());
+    ui->graphWidget->yAxis->setRange(tmp.at(0), tmp.last());
     ui->graphWidget->plotLayout()->insertRow(0);
     ui->graphWidget->plotLayout()->addElement(0, 0, new QCPPlotTitle(ui->graphWidget, "World Population"));
     ui->graphWidget->replot();
@@ -166,4 +169,10 @@ void MainWindow::parseData(QVector<QString> lines, QString separator)
         m_data.time.append((time.toDouble() - firstTime)/period);
         m_data.population.append(population.toDouble());
     }
+}
+
+void MainWindow::clearData()
+{
+    m_data.time.clear();
+    m_data.population.clear();
 }
