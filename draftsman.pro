@@ -15,11 +15,13 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
     optionswindow.cpp \
-    aboutwindow.cpp
+    aboutwindow.cpp \
+    drawgraphics.cpp
 
 HEADERS  += mainwindow.h \
     optionswindow.h \
-    aboutwindow.h
+    aboutwindow.h \
+    drawgraphics.h
 
 FORMS    += mainwindow.ui \
     optionswindow.ui \
