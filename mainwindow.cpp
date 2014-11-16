@@ -2,7 +2,7 @@
 #include "ui_mainwindow.h"
 #include "aboutwindow.h"
 #include "optionswindow.h"
-#include <math.h>
+#include "extrapolation.h"
 #include <QDebug>
 #include <QDesktopWidget>
 #include <QRect>
@@ -10,8 +10,6 @@
 #include <QSettings>
 #include <QMessageBox>
 #include <QFile>
-
-// http://blog.harrix.org/?p=1813
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -100,35 +98,15 @@ void MainWindow::onActionStart()
     redDotPen.setColor(QColor(Qt::red));
     redDotPen.setWidthF(1);
 
-    double sumY = 0;
-    double sumYT = 0;
-    double sumT2 = 0;
-    int timeCenter = m_data.time.length()/2 + ((m_data.time.length()%2) ? 1 : 0);
-    for (int i (0); i < m_data.time.length(); ++i)
-    {
-        sumY += m_data.population.at(i);
-        sumYT += m_data.population.at(i) * (i - timeCenter + 1);
-        sumT2 += pow((double) (m_data.time.at(i) - m_data.time.at(timeCenter)), 2.0);
-    }
-
-    double a0 = sumY/m_data.time.length();
-    double a1 = sumYT/sumT2;
-
-    QVector<double> time, population;
-    double timeStep = m_data.time.at(1) - m_data.time.at(0);
-    for (int i (0); i < m_data.time.length() + timeCenter; ++i)
-    {
-        time.append(i*timeStep);
-        population.append(a0 + a1*(i - timeCenter));
-    }
+    Data extr_data = exstrapolation(m_data);
 
     ui->graphWidget->graph(1)->setPen(redDotPen);
-    ui->graphWidget->graph(1)->setData(time, population);
+    ui->graphWidget->graph(1)->setData(extr_data.time, extr_data.population);
     ui->graphWidget->xAxis->setLabel(m_xLabel);
     ui->graphWidget->yAxis->setLabel("Population, bln");
-    QVector<double> tmp = population;
+    QVector<double> tmp = extr_data.population;
     qSort(tmp);
-    ui->graphWidget->xAxis->setRange(time.at(0), time.last());
+    ui->graphWidget->xAxis->setRange(extr_data.time.at(0), extr_data.time.last());
     ui->graphWidget->yAxis->setRange(tmp.at(0), tmp.last());
     ui->graphWidget->plotLayout()->insertRow(0);
     ui->graphWidget->plotLayout()->addElement(0, 0, new QCPPlotTitle(ui->graphWidget, "World Population"));

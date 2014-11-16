@@ -16,16 +16,21 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     optionswindow.cpp \
     aboutwindow.cpp \
-    qcustomplot.cpp
+    qcustomplot.cpp \
+    extrapolation.cpp
 
 HEADERS  += mainwindow.h \
     optionswindow.h \
     aboutwindow.h \
-    qcustomplot.h
+    qcustomplot.h \
+    extrapolation.h
 
 FORMS    += mainwindow.ui \
     optionswindow.ui \
     aboutwindow.ui
 
 OTHER_FILES += \
-    res.csv
+    res.csv \
+    extrapolation.cl
+
+LIBS += -lOpenCL

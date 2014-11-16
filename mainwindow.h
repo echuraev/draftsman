@@ -9,6 +9,12 @@ namespace Ui {
 class MainWindow;
 }
 
+typedef struct SData
+{
+    QVector<double> time;
+    QVector<double> population;
+} Data;
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -26,11 +32,7 @@ private slots:
 private:
     Ui::MainWindow *ui;
     void moveToCenter();
-    struct Data
-    {
-        QVector<double> time;
-        QVector<double> population;
-    } m_data;
+    Data m_data;
     QString m_xLabel;
     void parseData(QVector<QString> lines, QString separator);
     void clearData();
