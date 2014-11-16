@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include "aboutwindow.h"
 #include "optionswindow.h"
+#include <math.h>
 #include <QDebug>
 #include <QDesktopWidget>
 #include <QRect>
@@ -89,16 +90,45 @@ void MainWindow::onActionStart()
 
     ui->graphWidget->show();
     ui->graphWidget->addGraph();
+    ui->graphWidget->addGraph();
     QPen blueDotPen;
     blueDotPen.setColor(QColor(30, 40, 255, 150));
-    blueDotPen.setWidthF(4);
+    blueDotPen.setWidthF(8);
     ui->graphWidget->graph(0)->setPen(blueDotPen);
     ui->graphWidget->graph(0)->setData(m_data.time, m_data.population);
+    QPen redDotPen;
+    redDotPen.setColor(QColor(Qt::red));
+    redDotPen.setWidthF(1);
+
+    double sumY = 0;
+    double sumYT = 0;
+    double sumT2 = 0;
+    int timeCenter = m_data.time.length()/2 + ((m_data.time.length()%2) ? 1 : 0);
+    for (int i (0); i < m_data.time.length(); ++i)
+    {
+        sumY += m_data.population.at(i);
+        sumYT += m_data.population.at(i) * (i - timeCenter + 1);
+        sumT2 += pow((double) (m_data.time.at(i) - m_data.time.at(timeCenter)), 2.0);
+    }
+
+    double a0 = sumY/m_data.time.length();
+    double a1 = sumYT/sumT2;
+
+    QVector<double> time, population;
+    double timeStep = m_data.time.at(1) - m_data.time.at(0);
+    for (int i (0); i < m_data.time.length() + timeCenter; ++i)
+    {
+        time.append(i*timeStep);
+        population.append(a0 + a1*(i - timeCenter));
+    }
+
+    ui->graphWidget->graph(1)->setPen(redDotPen);
+    ui->graphWidget->graph(1)->setData(time, population);
     ui->graphWidget->xAxis->setLabel(m_xLabel);
     ui->graphWidget->yAxis->setLabel("Population, bln");
-    QVector<double> tmp = m_data.population;
+    QVector<double> tmp = population;
     qSort(tmp);
-    ui->graphWidget->xAxis->setRange(m_data.time.at(0), m_data.time.last());
+    ui->graphWidget->xAxis->setRange(time.at(0), time.last());
     ui->graphWidget->yAxis->setRange(tmp.at(0), tmp.last());
     ui->graphWidget->plotLayout()->insertRow(0);
     ui->graphWidget->plotLayout()->addElement(0, 0, new QCPPlotTitle(ui->graphWidget, "World Population"));
@@ -158,7 +188,6 @@ void MainWindow::parseData(QVector<QString> lines, QString separator)
         m_xLabel = "Hours";
     else
         m_xLabel = "Days";
-    qDebug() << period;
     foreach (QString str, lines)
     {
         QStringList list = str.split(separator, QString::SkipEmptyParts);
