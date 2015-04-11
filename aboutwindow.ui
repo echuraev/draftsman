@@ -42,7 +42,7 @@
           </font>
          </property>
          <property name="text">
-          <string>Draftsman v. 1.0.0</string>
+          <string>Draftsman v. 2.0.0</string>
          </property>
          <property name="textFormat">
           <enum>Qt::AutoText</enum>
@@ -73,7 +73,7 @@
        <item>
         <widget class="QLabel" name="label_2">
          <property name="text">
-          <string>Copyright 2014 Egor Churaev. All rights reserved.</string>
+          <string>Copyright 2015 Egor Churaev. All rights reserved.</string>
          </property>
         </widget>
        </item>

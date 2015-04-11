@@ -27,7 +27,7 @@ OptionsWindow * OptionsWindow::getInstance(QWidget *parent)
 
 OptionsWindow::OptionsWindow(QWidget *parent) :
     QWidget(parent),
-    m_settings("Egor Churaev", "Draftsman"),
+    m_settings("Egor Churaev", "Draftsman_2_0_0"),
     ui(new Ui::OptionsWindow)
 {
     ui->setupUi(this);
@@ -57,7 +57,7 @@ void OptionsWindow::moveToCenter()
 
 void OptionsWindow::onPathBtowseButton()
 {
-    QString path = QFileDialog::getOpenFileName(0, "Open file...", "", "*.txt *.csv");
+    QString path = QFileDialog::getOpenFileName(0, "Open file...", "", "*.db");
     ui->pathLine->setText(path);
 }
 

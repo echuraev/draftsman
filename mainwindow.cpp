@@ -2,7 +2,6 @@
 #include "ui_mainwindow.h"
 #include "aboutwindow.h"
 #include "optionswindow.h"
-#include "extrapolation.h"
 #include <QDebug>
 #include <QDesktopWidget>
 #include <QRect>
@@ -10,6 +9,8 @@
 #include <QSettings>
 #include <QMessageBox>
 #include <QFile>
+#include <algorithm>
+#include <QtSql>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -21,6 +22,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->menuBar->addAction(about);
     ui->graphWidget->hide();
     about->setText("About...");
+    m_data = new DrawData();
     connect(ui->actionStart, SIGNAL(triggered()), SLOT(onActionStart()));
     connect(ui->actionOptions, SIGNAL(triggered()), SLOT(onActionOptions()));
     connect(ui->actionExit, SIGNAL(triggered()), SLOT(close()));
@@ -35,13 +37,14 @@ void MainWindow::closeEvent(QCloseEvent * e){
 MainWindow::~MainWindow()
 {
     delete ui;
+    delete m_data;
 }
 
 void MainWindow::onActionStart()
 {
-    clearData();
+    m_data->clear();
 
-    QSettings settings("Egor Churaev", "Draftsman");
+    QSettings settings("Egor Churaev", "Draftsman_2_0_0");
     settings.beginGroup("/Options");
 
     QString separator = settings.value("/separator", ";").toString();
@@ -61,56 +64,82 @@ void MainWindow::onActionStart()
                                   "Please, enter path to a file with data!\nGo:\nFile->Options", QMessageBox::Ok);
             return;
         }
-        QFile inputFile(path);
-        QVector<QString> linesVector;
-        if (inputFile.open(QIODevice::ReadOnly))
-        {
-            QTextStream in(&inputFile);
-            while ( !in.atEnd() )
-            {
-                linesVector.append(in.readLine());
-            }
-            inputFile.close();
-        }
-        else
-        {
-            QMessageBox::critical(0, "Error!", "Cannot open file with data!", QMessageBox::Ok);
-            return;
-        }
-
-        parseData(linesVector, separator);
     }
-    else if (source == WEB_OPTIONS)
+
+    try
     {
-        QMessageBox::information(0, "Web version doesn't work!", "Web version doesn't implemented!", QMessageBox::Ok);
+        m_data->getMaxDataFromDBFile(path);
+    }
+    catch(QString e)
+    {
+        QMessageBox::critical(0, "Error!", e, QMessageBox::Ok);
         return;
     }
 
+    double maxVal, minVal;
+    maxVal = m_data->getValue().at(0);
+    for(int i(0); i < m_data->getValue().length(); ++i)
+    {
+        if (m_data->getValue().at(i) > maxVal)
+            maxVal = m_data->getValue().at(i);
+    }
+
+    QVector<double> items = m_data->getItems();
+    QVector<double> value = m_data->getValue();
+    qDebug() << value.length() << "\t" << value.at(0);
+
+    m_data->clear();
+
+    qDebug() << value.length() << "\t" << value.at(0);
+    try
+    {
+        m_data->getMinDataFromDBFile(path);
+    }
+    catch(QString e)
+    {
+        QMessageBox::critical(0, "Error!", e, QMessageBox::Ok);
+        return;
+    }
+
+    minVal = m_data->getValue().at(0);
+    for(int i(0); i < m_data->getValue().length(); ++i)
+    {
+        if (m_data->getValue().at(i) < minVal)
+            minVal = m_data->getValue().at(i);
+    }
+
     ui->graphWidget->show();
-    ui->graphWidget->addGraph();
-    ui->graphWidget->addGraph();
-    QPen blueDotPen;
-    blueDotPen.setColor(QColor(30, 40, 255, 150));
-    blueDotPen.setWidthF(8);
-    ui->graphWidget->graph(0)->setPen(blueDotPen);
-    ui->graphWidget->graph(0)->setData(m_data.time, m_data.population);
-    QPen redDotPen;
-    redDotPen.setColor(QColor(Qt::red));
-    redDotPen.setWidthF(1);
+    ui->graphWidget->legend->setVisible(true);
+    ui->graphWidget->yAxis->setRange(minVal - 0.5, maxVal + 0.5);
+    ui->graphWidget->xAxis->setRange(items.at(0) - 0.5, m_data->getItems().last() + 0.5);
+    ui->graphWidget->xAxis->setAutoTicks(false);
+    ui->graphWidget->xAxis->setAutoTickLabels(false);
+    ui->graphWidget->xAxis->setTickVector(items);
+    ui->graphWidget->xAxis->setTickVectorLabels(m_data->getTimes());
 
-    Data extr_data = exstrapolation(m_data);
+    ui->graphWidget->addGraph();
+    ui->graphWidget->graph(0)->setPen(QPen(QColor(30, 40, 255, 150)));
+    ui->graphWidget->graph(0)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssDisc, 5));
+    ui->graphWidget->graph(0)->setData(items, value);
+    ui->graphWidget->graph(0)->setName("Max Values");
 
-    ui->graphWidget->graph(1)->setPen(redDotPen);
-    ui->graphWidget->graph(1)->setData(extr_data.time, extr_data.population);
-    ui->graphWidget->xAxis->setLabel(m_xLabel);
-    ui->graphWidget->yAxis->setLabel("Population, bln");
-    QVector<double> tmp = extr_data.population;
-    qSort(tmp);
-    ui->graphWidget->xAxis->setRange(extr_data.time.at(0), extr_data.time.last());
-    ui->graphWidget->yAxis->setRange(tmp.at(0), tmp.last());
+    ui->graphWidget->addGraph();
+    ui->graphWidget->graph(1)->setPen(QPen(QColor(Qt::red)));
+    ui->graphWidget->graph(1)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssDisc, 5));
+    ui->graphWidget->graph(1)->setData(m_data->getItems(), m_data->getValue());
+    ui->graphWidget->graph(1)->setName("Min Values");
+
+    QFont labelFont = font();
+    labelFont.setPointSize(12);
+    ui->graphWidget->xAxis->setLabel("Date");
+    ui->graphWidget->xAxis->setLabelFont(labelFont);
+    ui->graphWidget->yAxis->setLabel("Price, $");
+    ui->graphWidget->yAxis->setLabelFont(labelFont);
     ui->graphWidget->plotLayout()->insertRow(0);
-    ui->graphWidget->plotLayout()->addElement(0, 0, new QCPPlotTitle(ui->graphWidget, "World Population"));
+    ui->graphWidget->plotLayout()->addElement(0, 0, new QCPPlotTitle(ui->graphWidget, "Apple Inc. Stock Quotes"));
     ui->graphWidget->replot();
+
+    qDebug() << value.length() << "\t" << value.at(0);
 }
 
 void MainWindow::onActionOptions()
@@ -135,51 +164,4 @@ void MainWindow::moveToCenter()
     center.setX(center.x() - (this->width()/2));
     center.setY(center.y() - (this->height()/2));
     move(center);
-}
-
-void MainWindow::parseData(QVector<QString> lines, QString separator)
-{
-    double firstTime = -1;
-    double period = -1;
-    foreach (QString str, lines)
-    {
-        QStringList list = str.split(separator, QString::SkipEmptyParts);
-        if (list.count() != 2)
-            continue;
-        QString time = list.at(0);
-        if (firstTime < 0)
-        {
-            firstTime = time.toDouble();
-            continue;
-        }
-        if (period < 0 && firstTime > 0)
-        {
-            period = time.toDouble() - firstTime;
-            break;
-        }
-    }
-    if (period < 60)
-        m_xLabel = "Seconds";
-    else if (period >= 60 && period < 3600)
-        m_xLabel = "Minutes";
-    else if (period >= 3600 && period < 86400)
-        m_xLabel = "Hours";
-    else
-        m_xLabel = "Days";
-    foreach (QString str, lines)
-    {
-        QStringList list = str.split(separator, QString::SkipEmptyParts);
-        if (list.count() != 2)
-            continue;
-        QString time = list.at(0);
-        QString population = list.at(1);
-        m_data.time.append((time.toDouble() - firstTime)/period);
-        m_data.population.append(population.toDouble());
-    }
-}
-
-void MainWindow::clearData()
-{
-    m_data.time.clear();
-    m_data.population.clear();
 }

@@ -5,6 +5,7 @@
 #-------------------------------------------------
 
 QT       += core gui
+QT += sql
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 
@@ -17,20 +18,16 @@ SOURCES += main.cpp\
     optionswindow.cpp \
     aboutwindow.cpp \
     qcustomplot.cpp \
-    extrapolation.cpp
+    drawdata.cpp
 
 HEADERS  += mainwindow.h \
     optionswindow.h \
     aboutwindow.h \
     qcustomplot.h \
-    extrapolation.h
+    drawdata.h
 
 FORMS    += mainwindow.ui \
     optionswindow.ui \
     aboutwindow.ui
 
-OTHER_FILES += \
-    res.csv \
-    extrapolation.cl
-
-LIBS += -lOpenCL
+OTHER_FILES +=
