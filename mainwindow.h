@@ -25,6 +25,7 @@ private slots:
     void onCreatePDFButton();
 
 private:
+    void createPDF(QPixmap *image, QString pdfName);
     Ui::MainWindow *ui;
     void moveToCenter();
     DrawData * m_data;

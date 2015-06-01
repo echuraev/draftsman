@@ -26,5 +26,3 @@ HEADERS  += mainwindow.h \
 
 FORMS    += mainwindow.ui \
     aboutwindow.ui
-
-OTHER_FILES +=

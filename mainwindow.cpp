@@ -12,6 +12,7 @@
 #include <QFileDialog>
 #include <algorithm>
 #include <QtSql>
+#include <QPdfWriter>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -83,6 +84,11 @@ void MainWindow::onCreatePDFButton()
         QMessageBox::critical(0, "Enter the name for pdf file!", "Please, enter the name to pdf file!", QMessageBox::Ok);
         return;
     }
+
+    if (!pdfName.endsWith(".pdf"))
+        pdfName += ".pdf";
+
+    QString fullPDFName = pdfDirPath + "/" + pdfName;
 
     QCustomPlot *plotWidget = new QCustomPlot();
     QDesktopWidget desktop;
@@ -160,12 +166,24 @@ void MainWindow::onCreatePDFButton()
     plotWidget->plotLayout()->insertRow(0);
     plotWidget->plotLayout()->addElement(0, 0, new QCPPlotTitle(plotWidget, "Apple Inc. Stock Quotes"));
     plotWidget->replot();
-    //plotWidget->show();
     QPixmap pixmap(plotWidget->size());
     plotWidget->render(&pixmap);
-    //pixmap.save("test.png");
+
+    createPDF(&pixmap, fullPDFName);
 
     QMessageBox::information(0, "Success!", "Success! PDF file has been created!", QMessageBox::Ok);
+}
+
+void MainWindow::createPDF(QPixmap *image, QString pdfName)
+{
+    QPdfWriter writer(pdfName);
+    writer.setPageOrientation(QPageLayout::Landscape);
+    QPainter painter(&writer);
+
+    writer.setPageSize(QPagedPaintDevice::A4);
+    painter.drawPixmap(QRect(0, 0, writer.logicalDpiY()*11.5, writer.logicalDpiX()*8), *image);
+
+    painter.end();
 }
 
 void MainWindow::moveToCenter()
