@@ -15,19 +15,16 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    optionswindow.cpp \
     aboutwindow.cpp \
     qcustomplot.cpp \
     drawdata.cpp
 
 HEADERS  += mainwindow.h \
-    optionswindow.h \
     aboutwindow.h \
     qcustomplot.h \
     drawdata.h
 
 FORMS    += mainwindow.ui \
-    optionswindow.ui \
     aboutwindow.ui
 
 OTHER_FILES +=

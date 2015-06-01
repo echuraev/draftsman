@@ -14,8 +14,8 @@ public:
     ~DrawData();
     void addValue(QString time, double value);
     void clear();
-    void getMaxDataFromDBFile(QString file);
-    void getMinDataFromDBFile(QString file);
+    void getMaxDataFromDBFile(QString file, int period);
+    void getMinDataFromDBFile(QString file, int period);
     QString getTime(int index);
     QVector<QString> getTimes();
     QVector<double> getItems();
@@ -24,6 +24,7 @@ private:
     void getDataFromDBFile(QString file, int oper);
     void getMaxAndMinTime();
     int getNumberOfDays();
+    QString getDateTimeFromMinTime(int day, int periodNumber);
     QString getDateFromMinTime(int day);
     static int m_itemsCounter;
     QVector<QString> m_time;
@@ -32,7 +33,9 @@ private:
     QSqlDatabase m_db;
     QString m_minTime;
     QString m_maxTime;
+    int m_period;
     int m_numberOfDays;
+    int *m_timesPerDay;
 };
 
 #endif // DRAWDATA_H

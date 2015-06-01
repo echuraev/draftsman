@@ -19,9 +19,10 @@ public:
     ~MainWindow();
 
 private slots:
-    void onActionStart();
-    void onActionOptions();
     void onActionAbout();
+    void onPathBrowseButton();
+    void onPdfBrowseButton();
+    void onCreatePDFButton();
 
 private:
     Ui::MainWindow *ui;

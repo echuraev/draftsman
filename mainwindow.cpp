@@ -1,7 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "aboutwindow.h"
-#include "optionswindow.h"
+#include "qcustomplot.h"
 #include <QDebug>
 #include <QDesktopWidget>
 #include <QRect>
@@ -9,6 +9,7 @@
 #include <QSettings>
 #include <QMessageBox>
 #include <QFile>
+#include <QFileDialog>
 #include <algorithm>
 #include <QtSql>
 
@@ -20,13 +21,13 @@ MainWindow::MainWindow(QWidget *parent) :
     this->moveToCenter();
     QAction * about = new QAction(0);
     ui->menuBar->addAction(about);
-    ui->graphWidget->hide();
     about->setText("About...");
     m_data = new DrawData();
-    connect(ui->actionStart, SIGNAL(triggered()), SLOT(onActionStart()));
-    connect(ui->actionOptions, SIGNAL(triggered()), SLOT(onActionOptions()));
     connect(ui->actionExit, SIGNAL(triggered()), SLOT(close()));
     connect(about, SIGNAL(triggered()), SLOT(onActionAbout()));
+    connect(ui->pdfBrowseButton, SIGNAL(clicked()), SLOT(onPdfBrowseButton()));
+    connect(ui->pathBrowseButton, SIGNAL(clicked()), SLOT(onPathBrowseButton()));
+    connect(ui->createPDFButton, SIGNAL(clicked()), SLOT(onCreatePDFButton()));
 }
 
 void MainWindow::closeEvent(QCloseEvent * e){
@@ -40,35 +41,57 @@ MainWindow::~MainWindow()
     delete m_data;
 }
 
-void MainWindow::onActionStart()
+void MainWindow::onActionAbout()
+{
+    AboutWindow * window = new AboutWindow();
+    window->show();
+}
+
+void MainWindow::onPathBrowseButton()
+{
+    QString path = QFileDialog::getOpenFileName(0, "Open file...", "", "*.db");
+    ui->pathLine->setText(path);
+}
+
+void MainWindow::onPdfBrowseButton()
+{
+    QString path = QFileDialog::getExistingDirectory(0, "Open file...", "");
+    ui->pdfPathLine->setText(path);
+}
+
+void MainWindow::onCreatePDFButton()
 {
     m_data->clear();
 
-    QSettings settings("Egor Churaev", "Draftsman_2_0_0");
-    settings.beginGroup("/Options");
+    QString dbPath = ui->pathLine->text();
+    QString pdfDirPath = ui->pdfPathLine->text();
+    QString pdfName = ui->pdfName->text();
 
-    QString separator = settings.value("/separator", ";").toString();
-    int source = settings.value("/source", FILE_OPTIONS).toInt();
-    QString path = settings.value("/path", "").toString();
-    //int period = settings.value("/period", 15).toInt();
-    //QString host = settings.value("/host", "54.191.174.225").toString();
-    //QString port = settings.value("/port", "1430").toString();
-
-    settings.endGroup();
-
-    if (source == FILE_OPTIONS)
+    if (dbPath.length() == 0)
     {
-        if (path.length() == 0)
-        {
-            QMessageBox::critical(0, "Enter path to file!",
-                                  "Please, enter path to a file with data!\nGo:\nFile->Options", QMessageBox::Ok);
-            return;
-        }
+        QMessageBox::critical(0, "Enter path to db file!", "Please, enter path to the db file!", QMessageBox::Ok);
+        return;
     }
+    if (pdfDirPath.length() == 0)
+    {
+        QMessageBox::critical(0, "Enter path to directory to new pdf file!",
+                              "Please, enter path to directory for pdf!", QMessageBox::Ok);
+        return;
+    }
+    if (pdfName.length() == 0)
+    {
+        QMessageBox::critical(0, "Enter the name for pdf file!", "Please, enter the name to pdf file!", QMessageBox::Ok);
+        return;
+    }
+
+    QCustomPlot *plotWidget = new QCustomPlot();
+    QDesktopWidget desktop;
+    QRect rect = desktop.availableGeometry(desktop.primaryScreen());
+    plotWidget->resize(rect.width(), rect.height());
 
     try
     {
-        m_data->getMaxDataFromDBFile(path);
+        m_data->getMaxDataFromDBFile(dbPath, ui->frequencyBox->currentIndex());
     }
     catch(QString e)
     {
@@ -93,7 +116,7 @@ void MainWindow::onActionStart()
     qDebug() << value.length() << "\t" << value.at(0);
     try
     {
-        m_data->getMinDataFromDBFile(path);
+        m_data->getMinDataFromDBFile(dbPath, ui->frequencyBox->currentIndex());
     }
     catch(QString e)
     {
@@ -108,52 +131,41 @@ void MainWindow::onActionStart()
             minVal = m_data->getValue().at(i);
     }
 
-    ui->graphWidget->show();
-    ui->graphWidget->legend->setVisible(true);
-    ui->graphWidget->yAxis->setRange(minVal - 0.5, maxVal + 0.5);
-    ui->graphWidget->xAxis->setRange(items.at(0) - 0.5, m_data->getItems().last() + 0.5);
-    ui->graphWidget->xAxis->setAutoTicks(false);
-    ui->graphWidget->xAxis->setAutoTickLabels(false);
-    ui->graphWidget->xAxis->setTickVector(items);
-    ui->graphWidget->xAxis->setTickVectorLabels(m_data->getTimes());
+    plotWidget->legend->setVisible(true);
+    plotWidget->yAxis->setRange(minVal - 0.5, maxVal + 0.5);
+    plotWidget->xAxis->setRange(items.at(0) - 0.5, m_data->getItems().last() + 0.5);
+    plotWidget->xAxis->setAutoTicks(false);
+    plotWidget->xAxis->setAutoTickLabels(false);
+    plotWidget->xAxis->setTickVector(items);
+    plotWidget->xAxis->setTickVectorLabels(m_data->getTimes());
 
-    ui->graphWidget->addGraph();
-    ui->graphWidget->graph(0)->setPen(QPen(QColor(30, 40, 255, 150)));
-    ui->graphWidget->graph(0)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssDisc, 5));
-    ui->graphWidget->graph(0)->setData(items, value);
-    ui->graphWidget->graph(0)->setName("Max Values");
+    plotWidget->addGraph();
+    plotWidget->graph(0)->setPen(QPen(QColor(30, 40, 255, 150)));
+    plotWidget->graph(0)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssDisc, 5));
+    plotWidget->graph(0)->setData(items, value);
+    plotWidget->graph(0)->setName("Max Values");
 
-    ui->graphWidget->addGraph();
-    ui->graphWidget->graph(1)->setPen(QPen(QColor(Qt::red)));
-    ui->graphWidget->graph(1)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssDisc, 5));
-    ui->graphWidget->graph(1)->setData(m_data->getItems(), m_data->getValue());
-    ui->graphWidget->graph(1)->setName("Min Values");
+    plotWidget->addGraph();
+    plotWidget->graph(1)->setPen(QPen(QColor(Qt::red)));
+    plotWidget->graph(1)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssDisc, 5));
+    plotWidget->graph(1)->setData(m_data->getItems(), m_data->getValue());
+    plotWidget->graph(1)->setName("Min Values");
 
     QFont labelFont = font();
     labelFont.setPointSize(12);
-    ui->graphWidget->xAxis->setLabel("Date");
-    ui->graphWidget->xAxis->setLabelFont(labelFont);
-    ui->graphWidget->yAxis->setLabel("Price, $");
-    ui->graphWidget->yAxis->setLabelFont(labelFont);
-    ui->graphWidget->plotLayout()->insertRow(0);
-    ui->graphWidget->plotLayout()->addElement(0, 0, new QCPPlotTitle(ui->graphWidget, "Apple Inc. Stock Quotes"));
-    ui->graphWidget->replot();
+    plotWidget->xAxis->setLabel("Date");
+    plotWidget->xAxis->setLabelFont(labelFont);
+    plotWidget->yAxis->setLabel("Price, $");
+    plotWidget->yAxis->setLabelFont(labelFont);
+    plotWidget->plotLayout()->insertRow(0);
+    plotWidget->plotLayout()->addElement(0, 0, new QCPPlotTitle(plotWidget, "Apple Inc. Stock Quotes"));
+    plotWidget->replot();
+    //plotWidget->show();
+    QPixmap pixmap(plotWidget->size());
+    plotWidget->render(&pixmap);
+    //pixmap.save("test.png");
 
-    qDebug() << value.length() << "\t" << value.at(0);
-}
-
-void MainWindow::onActionOptions()
-{
-    OptionsWindow * window = OptionsWindow::getInstance();
-    window->show();
-    window->raise();
-    window->activateWindow();
-}
-
-void MainWindow::onActionAbout()
-{
-    AboutWindow * window = new AboutWindow();
-    window->show();
+    QMessageBox::information(0, "Success!", "Success! PDF file has been created!", QMessageBox::Ok);
 }
 
 void MainWindow::moveToCenter()
